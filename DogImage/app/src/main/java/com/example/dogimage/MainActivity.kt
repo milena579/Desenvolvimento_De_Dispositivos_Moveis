@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun getImage(view: View){
-        val breed = etBreed.text.toString()
+        val breed = etBreed.text.toString().trim().lowercase()
 
         if(breed.isNotEmpty()){
             getImageApi(breed)
@@ -67,16 +67,28 @@ class MainActivity : AppCompatActivity() {
                 val response = withContext(Dispatchers.IO){
                     dogApi.getRandomDogImage(breed)
                 }
-                hideProgressBar()
 
                 if(response.status == "success"){
-                    Picasso.get().load(response.message).into(ivDog)
-                }else{
-                    Toast.makeText(this@MainActivity, "Falha ao buscar imagem", Toast.LENGTH_SHORT).show()
+                    Picasso.get()
+                        .load(response.message)
+                        .into(ivDog, object : com.squareup.picasso.Callback {
+                            override fun onSuccess() {
+                                hideProgressBar()
+                            }
+
+                            override fun onError(e: Exception?) {
+                                hideProgressBar()
+                                Toast.makeText(this@MainActivity, "Erro ao carregar imagem", Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                } else {
+                    hideProgressBar()
+                    Toast.makeText(this@MainActivity, "Raça não encontrada", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception){
+                hideProgressBar()
                 Log.e("MainActivity", "Erro ao buscar imagem", e)
-                Toast.makeText(this@MainActivity, "Erro ao buscar imagem", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Erro de conexão ou raça inválida", Toast.LENGTH_SHORT).show()
             }
         }
     }
